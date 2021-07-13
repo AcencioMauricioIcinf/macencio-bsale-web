@@ -14,11 +14,13 @@
     <nav class="navbar navbar-inverse">
         <div class="container-fluid">
             <div class="navbar-header">
-                <a class="navbar-brand" href="index.html">Bsale Test</a>
+                <a class="navbar-brand" href="index.html">Bsale Test [INICIO]</a>
             </div>
             <form class="form-inline my-2 my-lg-0" action="index.html">
                 <input class="form-control mr-sm-2" type="search" placeholder="Search" name="term" aria-label="Search">
-                <button class="btn my-2 my-sm-0" type="submit" required>Buscar</button>
+                <select class="form-control form-control-sm" name="cat" id="categories">
+                </select>
+                <button class="btn my-2 my-sm-0" type="submit">Buscar</button>
             </form>
         </div>
     </nav>
@@ -49,8 +51,13 @@
         async function fetchData() {
             let url = 'https://macencio-bsale-api.herokuapp.com/api/';
             const params = new URLSearchParams(window.location.search);
+
+            // Si existen parámetros de búsqueda, incluirlos
             if (params.has("term")) {
                 url += 'search?term=' + params.get('term');
+                if (params.get("cat")?.trim) {
+                    url += '&cat=' + params.get("cat");
+                }
             }
             let response = await fetch(url);
             let data = await response.json();
@@ -61,8 +68,7 @@
         async function render() {
             let items = await fetchData();
             let html = '';
-
-            items.map(item => {
+            let options = items.map(item => {
                 let disc = (item.discount) ? "-" + item.discount + "%" : ""
                 let htmlSegment = `<tr>
                     <td><img src="${item.url_image}" alt="(Sin imagen)" width="100px"></td>
@@ -72,10 +78,18 @@
                     <td>${item.cat}</td>
                 </tr>`;
                 html += htmlSegment;
+                return `<option>${item.cat}</option>`;
             });
-
-            let container = document.getElementById("main_t")
-            container.innerHTML = html;
+            
+            // Filtra, sin repetir, las categorías presentes de los datos obtenidos
+            options = [...new Set(options)]
+            options.unshift('<option value="" selected>Categorías (Todas)</option>')
+            
+            // Muestra los datos a la página en sí
+            let dropDown = document.getElementById("categories")
+            dropDown.innerHTML = options.join('')
+            let dataTable = document.getElementById("main_t")
+            dataTable.innerHTML = html;
         }
     </script>
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
